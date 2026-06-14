@@ -33,7 +33,7 @@ async function main() {
       name: "Trabajo",
       description: "Proyectos y tareas del día a día laboral.",
       color: "#534AB7",
-      icon: "💼",
+      icon: "Briefcase",
       position: 0,
     },
   });
@@ -128,7 +128,7 @@ async function main() {
       name: "Personal",
       description: "Recados y pendientes de la vida diaria.",
       color: "#1D9E75",
-      icon: "🏠",
+      icon: "House",
       position: 1,
     },
   });
@@ -190,7 +190,7 @@ async function main() {
       name: "Gimnasio",
       description: "Plan de entrenamiento y seguimiento.",
       color: "#D85A30",
-      icon: "🏋️",
+      icon: "Dumbbell",
       position: 2,
     },
   });

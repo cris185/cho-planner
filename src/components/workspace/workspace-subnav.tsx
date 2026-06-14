@@ -3,15 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useT } from "@/components/i18n-provider";
 import { cn } from "@/lib/utils";
 
 export function WorkspaceSubNav({ workspaceId }: { workspaceId: string }) {
   const pathname = usePathname();
+  const t = useT();
   const base = `/workspaces/${workspaceId}`;
 
   const tabs = [
-    { href: base, label: "Board", active: pathname === base },
-    { href: `${base}/sprints`, label: "Sprints", active: pathname.startsWith(`${base}/sprints`) },
+    { href: base, label: t.board.tabBoard, active: pathname === base },
+    {
+      href: `${base}/sprints`,
+      label: t.board.tabSprints,
+      active: pathname.startsWith(`${base}/sprints`),
+    },
   ];
 
   return (

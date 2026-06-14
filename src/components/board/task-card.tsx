@@ -45,12 +45,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  STATUS_META,
-  TASK_STATUSES,
-  weightColorVar,
-  type TaskStatusValue,
-} from "@/lib/validations/task";
+import { useT } from "@/components/i18n-provider";
+import { useStatusLabels } from "@/components/use-status-labels";
+import { DEFAULT_LOCALE } from "@/lib/i18n/config";
+import { format } from "@/lib/i18n";
+import { TASK_STATUSES, weightColorVar, type TaskStatusValue } from "@/lib/validations/task";
 import { syncTaskToCalendar, unsyncTaskFromCalendar } from "@/server/actions/calendar";
 import { assignTaskToSprint } from "@/server/actions/sprint";
 import { deleteTask, moveTask } from "@/server/actions/task";
@@ -76,7 +75,7 @@ export type BoardTask = TaskForDialog & {
 
 export type SprintOption = { id: string; name: string };
 
-const dateFmt = new Intl.DateTimeFormat("es", { day: "2-digit", month: "short" });
+const dateFmt = new Intl.DateTimeFormat(DEFAULT_LOCALE, { day: "2-digit", month: "short" });
 
 /** Versión estática para el DragOverlay (sigue al cursor mientras se arrastra). */
 export function TaskCardOverlay({ task }: { task: BoardTask }) {
@@ -101,6 +100,8 @@ export function TaskCard({
   sprints?: SprintOption[];
   googleConnected?: boolean;
 }) {
+  const t = useT();
+  const statusLabels = useStatusLabels();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -113,7 +114,7 @@ export function TaskCard({
       const res = await syncTaskToCalendar(task.id);
       if (res.error) toast.error(res.error);
       else {
-        toast.success("Subida a Google Calendar");
+        toast.success(t.task.toastUploaded);
         setSyncOpen(false);
         router.refresh();
       }
@@ -125,7 +126,7 @@ export function TaskCard({
       const res = await unsyncTaskFromCalendar(task.id);
       if (res.error) toast.error(res.error);
       else {
-        toast.success("Quitada de Google Calendar");
+        toast.success(t.task.toastRemoved);
         router.refresh();
       }
     });
@@ -150,7 +151,7 @@ export function TaskCard({
       const res = await assignTaskToSprint(task.id, sprintId);
       if (res.error) toast.error(res.error);
       else {
-        toast.success(sprintId ? "Asignada al sprint" : "Quitada del sprint");
+        toast.success(sprintId ? t.task.toastAssignedSprint : t.task.toastRemovedSprint);
         router.refresh();
       }
     });
@@ -163,7 +164,7 @@ export function TaskCard({
         toast.error(res.error);
         return;
       }
-      toast.success("Tarea eliminada");
+      toast.success(t.task.toastDeleted);
       setDeleteOpen(false);
       router.refresh();
     });
@@ -190,7 +191,7 @@ export function TaskCard({
         <button
           type="button"
           {...listeners}
-          aria-label="Arrastrar tarea"
+          aria-label={t.task.dragTask}
           className="-ml-1 mt-0.5 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
         >
           <GripVertical className="h-4 w-4" />
@@ -208,7 +209,7 @@ export function TaskCard({
               variant="ghost"
               size="icon"
               className="-mr-1 -mt-1 h-6 w-6 shrink-0"
-              aria-label="Opciones de la tarea"
+              aria-label={t.task.options}
               disabled={pending}
             >
               <MoreVertical className="h-4 w-4" />
@@ -216,28 +217,29 @@ export function TaskCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onSelect={() => setDetailOpen(true)}>
-              <ListChecks className="mr-2 h-4 w-4" /> Ver detalle / subtareas
+              <ListChecks className="mr-2 h-4 w-4" /> {t.task.viewDetail}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" /> Editar
+              <Pencil className="mr-2 h-4 w-4" /> {t.common.edit}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {TASK_STATUSES.filter((s) => s !== task.status).map((s) => (
               <DropdownMenuItem key={s} onSelect={() => handleMove(s)}>
-                <MoveRight className="mr-2 h-4 w-4" /> Mover a {STATUS_META[s].label}
+                <MoveRight className="mr-2 h-4 w-4" />{" "}
+                {format(t.task.moveTo, { status: statusLabels[s] })}
               </DropdownMenuItem>
             ))}
             {sprints.length > 0 && (
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  <FolderGit2 className="mr-2 h-4 w-4" /> Sprint
+                  <FolderGit2 className="mr-2 h-4 w-4" /> {t.task.sprint}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   <DropdownMenuRadioGroup
                     value={task.sprintId ?? "none"}
                     onValueChange={handleAssignSprint}
                   >
-                    <DropdownMenuRadioItem value="none">Sin sprint</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="none">{t.task.noSprint}</DropdownMenuRadioItem>
                     {sprints.map((s) => (
                       <DropdownMenuRadioItem key={s.id} value={s.id}>
                         {s.name}
@@ -251,18 +253,18 @@ export function TaskCard({
               <>
                 <DropdownMenuItem onSelect={() => setSyncOpen(true)}>
                   <CalendarPlus className="mr-2 h-4 w-4" />
-                  {task.calendarSynced ? "Actualizar en Calendar" : "Subir a Calendar"}
+                  {task.calendarSynced ? t.task.updateCalendar : t.task.uploadCalendar}
                 </DropdownMenuItem>
                 {task.calendarSynced && (
                   <DropdownMenuItem onSelect={handleUnsyncCalendar}>
-                    <CalendarX className="mr-2 h-4 w-4" /> Quitar de Calendar
+                    <CalendarX className="mr-2 h-4 w-4" /> {t.task.removeCalendar}
                   </DropdownMenuItem>
                 )}
               </>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
-              <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              <Trash2 className="mr-2 h-4 w-4" /> {t.common.delete}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -280,7 +282,7 @@ export function TaskCard({
         >
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
-              <ListChecks className="h-3 w-3" /> Subtareas
+              <ListChecks className="h-3 w-3" /> {t.task.subtasks}
             </span>
             <span>
               {subtaskDone}/{subtaskTotal}
@@ -299,7 +301,7 @@ export function TaskCard({
           onClick={() => setDetailOpen(true)}
           className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-primary"
         >
-          <Plus className="h-3 w-3" /> Subtareas
+          <Plus className="h-3 w-3" /> {t.task.subtasks}
         </button>
       )}
 
@@ -307,7 +309,7 @@ export function TaskCard({
         <span
           className="inline-flex h-5 min-w-5 items-center justify-center rounded px-1.5 text-[11px] font-semibold text-white"
           style={{ backgroundColor: weightColorVar(task.weight) }}
-          title={`Peso ${task.weight}`}
+          title={format(t.task.weightTitle, { weight: task.weight })}
         >
           {task.weight}
         </span>
@@ -325,7 +327,7 @@ export function TaskCard({
         {task.calendarSynced && (
           <span
             className="inline-flex items-center gap-1 text-[11px] text-[var(--status-done)]"
-            title="En Google Calendar"
+            title={t.task.inCalendar}
           >
             <CalendarCheck className="h-3 w-3" />
           </span>
@@ -353,15 +355,16 @@ export function TaskCard({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {task.calendarSynced ? "¿Actualizar en Google Calendar?" : "¿Subir a Google Calendar?"}
+              {task.calendarSynced ? t.task.syncTitleUpdate : t.task.syncTitleCreate}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Se {task.calendarSynced ? "actualizará" : "creará"} un evento en tu calendario con la
-              fecha límite de “{task.title}”.
+              {format(task.calendarSynced ? t.task.syncDescUpdate : t.task.syncDescCreate, {
+                title: task.title,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={pending}>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -369,7 +372,7 @@ export function TaskCard({
               }}
               disabled={pending}
             >
-              {pending ? "Subiendo…" : "Confirmar"}
+              {pending ? t.task.uploading : t.common.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -378,13 +381,11 @@ export function TaskCard({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar esta tarea?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se borrarán también sus subtareas. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t.task.deleteTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{t.task.deleteDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={pending}>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -393,7 +394,7 @@ export function TaskCard({
               disabled={pending}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              {pending ? "Eliminando…" : "Eliminar"}
+              {pending ? t.common.deleting : t.common.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

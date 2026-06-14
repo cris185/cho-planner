@@ -12,6 +12,7 @@ import {
   type AiProvider,
 } from "@/lib/ai/registry";
 import { db } from "@/lib/db";
+import { getDictionary } from "@/lib/i18n";
 import { requireUser } from "@/lib/session";
 import type { TaskStatusValue } from "@/lib/validations/task";
 
@@ -21,6 +22,7 @@ export default async function WorkspaceBoardPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requireUser();
+  const t = getDictionary();
   const { id } = await params;
 
   // El layout ya verificó la propiedad del workspace; filtramos por el id.
@@ -102,7 +104,7 @@ export default async function WorkspaceBoardPage({
           workspaceId={id}
           trigger={
             <Button size="sm">
-              <Plus className="mr-1 h-4 w-4" /> Nueva tarea
+              <Plus className="mr-1 h-4 w-4" /> {t.board.newTask}
             </Button>
           }
         />

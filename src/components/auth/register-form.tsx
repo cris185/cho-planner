@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
+import { useT } from "@/components/i18n-provider";
 import { registerUser } from "@/server/actions/auth";
 
 const inputClass =
@@ -14,6 +15,7 @@ function FieldError({ messages }: { messages?: string[] }) {
 }
 
 export function RegisterForm() {
+  const t = useT();
   const [state, formAction, pending] = useActionState(registerUser, undefined);
 
   return (
@@ -21,7 +23,7 @@ export function RegisterForm() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor="firstName" className="text-sm font-medium">
-            Nombre
+            {t.auth.firstName}
           </label>
           <input
             id="firstName"
@@ -29,7 +31,7 @@ export function RegisterForm() {
             type="text"
             autoComplete="given-name"
             required
-            placeholder="Tu nombre"
+            placeholder={t.auth.firstNamePlaceholder}
             className={inputClass}
           />
           <FieldError messages={state?.fieldErrors?.firstName} />
@@ -37,14 +39,14 @@ export function RegisterForm() {
 
         <div className="space-y-1.5">
           <label htmlFor="lastName" className="text-sm font-medium">
-            Apellido <span className="text-neutral-400">(opcional)</span>
+            {t.auth.lastName} <span className="text-neutral-400">({t.common.optional})</span>
           </label>
           <input
             id="lastName"
             name="lastName"
             type="text"
             autoComplete="family-name"
-            placeholder="Tu apellido"
+            placeholder={t.auth.lastNamePlaceholder}
             className={inputClass}
           />
           <FieldError messages={state?.fieldErrors?.lastName} />
@@ -53,7 +55,7 @@ export function RegisterForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-sm font-medium">
-          Correo
+          {t.auth.email}
         </label>
         <input
           id="email"
@@ -61,7 +63,7 @@ export function RegisterForm() {
           type="email"
           autoComplete="email"
           required
-          placeholder="tu@correo.com"
+          placeholder={t.auth.emailPlaceholder}
           className={inputClass}
         />
         <FieldError messages={state?.fieldErrors?.email} />
@@ -69,7 +71,7 @@ export function RegisterForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="password" className="text-sm font-medium">
-          Contraseña
+          {t.auth.password}
         </label>
         <input
           id="password"
@@ -77,7 +79,7 @@ export function RegisterForm() {
           type="password"
           autoComplete="new-password"
           required
-          placeholder="Mínimo 8 caracteres"
+          placeholder={t.auth.passwordPlaceholder}
           className={inputClass}
         />
         <FieldError messages={state?.fieldErrors?.password} />
@@ -94,13 +96,13 @@ export function RegisterForm() {
         disabled={pending}
         className="w-full rounded-lg bg-[#534AB7] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#463db0] disabled:opacity-60"
       >
-        {pending ? "Creando cuenta…" : "Crear cuenta"}
+        {pending ? t.auth.signingUp : t.auth.signUp}
       </button>
 
       <p className="text-center text-sm text-neutral-500">
-        ¿Ya tienes cuenta?{" "}
+        {t.auth.haveAccount}{" "}
         <Link href="/login" className="font-medium text-[#534AB7] hover:underline">
-          Entra
+          {t.auth.signInLink}
         </Link>
       </p>
     </form>

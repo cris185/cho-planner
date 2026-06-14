@@ -6,6 +6,8 @@
 
 Arquitectura *local-first*, *Bring Your Own Keys*, mobile-first. Pensado para uso cotidiano y de trabajo.
 
+**Español** · [English](README.en.md)
+
 <br />
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
@@ -66,6 +68,7 @@ El diseño parte de cuatro principios:
 - Subtareas atómicas y ligeras (título + nota corta opcional + peso + estado).
 - Sprints: agrupación de tareas en periodos con objetivo y fechas.
 - Notas en Markdown, dentro de un workspace o independientes, con recordatorio opcional.
+- PWA instalable: service worker con página offline; nunca cachea las rutas de API.
 
 **Generación con IA**
 
@@ -83,13 +86,25 @@ El diseño parte de cuatro principios:
 
 ## Capturas
 
-> Sustituye estas referencias por tus propias imágenes en `docs/screenshots/`.
-
 <div align="center">
 
-| Board Kanban | Asistente de IA |
+### Board Kanban
+Tareas con prioridad por peso, badge de generación con IA y progreso de subtareas, con drag and drop entre columnas.
+
+<img src="docs/screenshots/board.png" width="820" alt="Board Kanban con tareas" />
+
+<br /><br />
+
+### Asistente de IA
+Descompone un objetivo en subtareas con pesos y fechas sugeridas; chat con avatar y persona personalizables.
+
+<img src="docs/screenshots/ai.png" width="820" alt="Asistente de IA generando un plan" />
+
+<br /><br />
+
+| Vista móvil | Configuración |
 |:---:|:---:|
-| <img src="docs/screenshots/board.png" width="420" alt="Board Kanban" /> | <img src="docs/screenshots/chat.png" width="420" alt="Chat con el asistente" /> |
+| <img src="docs/screenshots/mobile.png" width="300" alt="Board en vista móvil" /> | <img src="docs/screenshots/settings.png" width="420" alt="Gestión de API keys y conexión de Google" /> |
 
 </div>
 
@@ -158,6 +173,7 @@ Cada modelo se declara en un `MODEL_REGISTRY` con su nivel de soporte de salida 
 | **DiceBear** | Generación de avatares del asistente |
 | **react-markdown** + **remark-gfm** | Renderizado de notas en Markdown |
 | **sonner** | Notificaciones |
+| **PWA** (Web App Manifest + Service Worker) | App instalable con soporte offline |
 
 ### Backend (dentro de Next.js)
 
@@ -403,7 +419,7 @@ Abre **http://localhost:3000**, regístrate o entra con la cuenta demo, y empiez
 - [x] Avatar y persona del asistente
 - [x] Integración con Google Calendar
 - [x] Pulido responsive y datos de ejemplo
-- [ ] PWA (instalable, offline parcial) — opcional
+- [x] PWA: instalable, con service worker y página offline
 
 ---
 

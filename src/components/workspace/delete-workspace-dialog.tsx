@@ -14,6 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useT } from "@/components/i18n-provider";
+import { format } from "@/lib/i18n";
 import { deleteWorkspace } from "@/server/actions/workspace";
 
 export function DeleteWorkspaceDialog({
@@ -27,6 +29,7 @@ export function DeleteWorkspaceDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -37,7 +40,7 @@ export function DeleteWorkspaceDialog({
         toast.error(res.error);
         return;
       }
-      toast.success("Workspace eliminado");
+      toast.success(t.workspace.deleted);
       onOpenChange(false);
       router.push("/");
       router.refresh();
@@ -48,13 +51,11 @@ export function DeleteWorkspaceDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar “{name}”?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Se borrarán también sus tareas, sprints y notas. Esta acción no se puede deshacer.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{format(t.workspace.deleteTitle, { name })}</AlertDialogTitle>
+          <AlertDialogDescription>{t.workspace.deleteDesc}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>{t.common.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
@@ -63,7 +64,7 @@ export function DeleteWorkspaceDialog({
             disabled={pending}
             className="bg-destructive text-white hover:bg-destructive/90"
           >
-            {pending ? "Eliminando…" : "Eliminar"}
+            {pending ? t.common.deleting : t.common.delete}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { useT } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,13 +18,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useStatusLabels } from "@/components/use-status-labels";
 import { cn } from "@/lib/utils";
-import {
-  STATUS_META,
-  TASK_STATUSES,
-  weightColorVar,
-  type TaskStatusValue,
-} from "@/lib/validations/task";
+import { TASK_STATUSES, weightColorVar, type TaskStatusValue } from "@/lib/validations/task";
 import { createTask, updateTask, type TaskActionState } from "@/server/actions/task";
 
 export type TaskForDialog = {
@@ -55,6 +52,8 @@ export function TaskDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
+  const statusLabels = useStatusLabels();
   const isEdit = Boolean(task);
   const action = isEdit ? updateTask : createTask;
 
@@ -73,7 +72,7 @@ export function TaskDialog({
   useEffect(() => {
     if (state?.success) {
       setOpen(false);
-      toast.success(isEdit ? "Tarea actualizada" : "Tarea creada");
+      toast.success(isEdit ? t.task.toastUpdated : t.task.toastCreated);
       router.refresh();
     } else if (state?.error) {
       toast.error(state.error);
@@ -94,10 +93,8 @@ export function TaskDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Editar tarea" : "Nueva tarea"}</DialogTitle>
-          <DialogDescription>
-            Define qué hay que hacer, su prioridad y en qué columna va.
-          </DialogDescription>
+          <DialogTitle>{isEdit ? t.task.editTitle : t.task.newTitle}</DialogTitle>
+          <DialogDescription>{t.task.dialogDesc}</DialogDescription>
         </DialogHeader>
 
         <form key={String(open)} action={formAction} className="space-y-4">
@@ -107,14 +104,14 @@ export function TaskDialog({
           <input type="hidden" name="status" value={status} />
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-title">Título</Label>
+            <Label htmlFor="task-title">{t.task.title}</Label>
             <Input
               id="task-title"
               name="title"
               required
               maxLength={120}
               defaultValue={task?.title ?? ""}
-              placeholder="¿Qué hay que hacer?"
+              placeholder={t.task.titlePlaceholder}
             />
             {state?.fieldErrors?.title && (
               <p className="text-xs text-destructive">{state.fieldErrors.title[0]}</p>
@@ -122,20 +119,20 @@ export function TaskDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-description">Descripción (opcional)</Label>
+            <Label htmlFor="task-description">{t.task.description}</Label>
             <Textarea
               id="task-description"
               name="description"
               maxLength={2000}
               defaultValue={task?.description ?? ""}
-              placeholder="Detalles, contexto, criterios…"
+              placeholder={t.task.descriptionPlaceholder}
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="task-weight">Prioridad / peso</Label>
+              <Label htmlFor="task-weight">{t.task.priority}</Label>
               <span
                 className="inline-flex h-6 min-w-6 items-center justify-center rounded-md px-2 text-xs font-semibold text-white"
                 style={{ backgroundColor: weightColorVar(weight) }}
@@ -155,7 +152,7 @@ export function TaskDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Estado</Label>
+            <Label>{t.task.status}</Label>
             <div className="flex flex-wrap gap-2">
               {TASK_STATUSES.map((s) => (
                 <button
@@ -169,14 +166,14 @@ export function TaskDialog({
                       : "hover:bg-accent",
                   )}
                 >
-                  {STATUS_META[s].label}
+                  {statusLabels[s]}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-due">Fecha límite (opcional)</Label>
+            <Label htmlFor="task-due">{t.task.dueDate}</Label>
             <Input
               id="task-due"
               name="dueDate"
@@ -188,7 +185,7 @@ export function TaskDialog({
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>
-              {pending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear tarea"}
+              {pending ? t.common.saving : isEdit ? t.common.saveChanges : t.task.createBtn}
             </Button>
           </DialogFooter>
         </form>

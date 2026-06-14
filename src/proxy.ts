@@ -9,6 +9,9 @@ const { auth } = NextAuth(authConfig);
 export const proxy = auth;
 
 export const config = {
-  // Protege todo salvo rutas internas de Next, la API de auth y estáticos.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|ico)$).*)"],
+  // Protege todo salvo rutas internas de Next, la API de auth, los recursos PWA
+  // (manifest, service worker, página offline) y estáticos.
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|.*\\.(?:png|jpg|jpeg|svg|ico)$).*)",
+  ],
 };

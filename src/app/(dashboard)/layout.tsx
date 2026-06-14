@@ -6,6 +6,7 @@ import { SidebarContent } from "@/components/dashboard/sidebar-content";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
+import { getDictionary } from "@/lib/i18n";
 import { requireUser } from "@/lib/session";
 
 export default async function DashboardLayout({
@@ -14,6 +15,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+  const t = getDictionary();
 
   const workspaces = await db.workspace.findMany({
     where: { userId: user.id },
@@ -46,7 +48,8 @@ export default async function DashboardLayout({
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden text-sm text-muted-foreground sm:inline">
-              Hola, <span className="font-semibold text-foreground">{user.firstName}</span> 👋
+              {t.nav.hello}{" "}
+              <span className="font-semibold text-foreground">{user.firstName}</span> 👋
             </span>
             <ThemeToggle />
             <form
@@ -56,7 +59,7 @@ export default async function DashboardLayout({
               }}
             >
               <Button type="submit" variant="outline" size="sm">
-                Salir
+                {t.nav.signOut}
               </Button>
             </form>
           </div>

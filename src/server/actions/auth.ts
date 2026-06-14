@@ -4,8 +4,11 @@ import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
 
 import { signIn } from "@/auth";
+import { getDictionary } from "@/lib/i18n";
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validations/auth";
+
+const t = getDictionary();
 
 export type AuthActionState = {
   error?: string;
@@ -25,7 +28,7 @@ export async function registerUser(
 
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
-    return { error: "Ya existe una cuenta con ese correo." };
+    return { error: t.auth.errorEmailExists };
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
@@ -43,9 +46,7 @@ export async function registerUser(
     await signIn("credentials", { email, password, redirectTo: "/" });
   } catch (error) {
     if (error instanceof AuthError) {
-      return {
-        error: "Cuenta creada, pero falló el inicio de sesión. Entra manualmente.",
-      };
+      return { error: t.auth.errorSignupLogin };
     }
     throw error; // re-lanza el redirect de Next
   }
@@ -63,7 +64,7 @@ export async function authenticate(
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Correo o contraseña incorrectos." };
+      return { error: t.auth.errorInvalidCredentials };
     }
     throw error; // re-lanza el redirect de Next
   }

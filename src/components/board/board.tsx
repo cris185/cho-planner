@@ -23,9 +23,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { useT } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
+import { useStatusLabels } from "@/components/use-status-labels";
 import { cn } from "@/lib/utils";
-import { STATUS_META, TASK_STATUSES, type TaskStatusValue } from "@/lib/validations/task";
+import { TASK_STATUSES, type TaskStatusValue } from "@/lib/validations/task";
 import { reorderTasks } from "@/server/actions/task";
 
 import { TaskCard, TaskCardOverlay, type BoardTask, type SprintOption } from "./task-card";
@@ -55,6 +57,8 @@ function Column({
   className?: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
+  const t = useT();
+  const statusLabels = useStatusLabels();
 
   return (
     <div
@@ -66,7 +70,7 @@ function Column({
     >
       <div className="mb-3 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold">{STATUS_META[status].label}</h3>
+          <h3 className="text-sm font-semibold">{statusLabels[status]}</h3>
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
             {tasks.length}
           </span>
@@ -78,7 +82,7 @@ function Column({
         <div ref={setNodeRef} className="flex min-h-16 flex-1 flex-col gap-2.5">
           {tasks.length === 0 ? (
             <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">
-              Sin tareas
+              {t.board.noTasks}
             </p>
           ) : (
             tasks.map((task) => (
@@ -104,12 +108,13 @@ function TaskDialogTrigger({
   workspaceId: string;
   status: TaskStatusValue;
 }) {
+  const t = useT();
   return (
     <TaskDialog
       workspaceId={workspaceId}
       defaultStatus={status}
       trigger={
-        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Añadir tarea">
+        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={t.board.addTask}>
           <Plus className="h-4 w-4" />
         </Button>
       }
@@ -132,6 +137,7 @@ export function Board({
   const [items, setItems] = useState<Grouped>(() => group(tasks));
   const [mobileStatus, setMobileStatus] = useState<TaskStatusValue>("TODO");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const statusLabels = useStatusLabels();
 
   // Re-sincroniza con los datos del servidor cuando cambian (tras refresh).
   useEffect(() => {
@@ -225,7 +231,7 @@ export function Board({
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {STATUS_META[s].label}
+            {statusLabels[s]}
             <span className="ml-1 text-muted-foreground">{items[s].length}</span>
           </button>
         ))}

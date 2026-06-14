@@ -4,10 +4,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { WorkspaceDialog } from "@/components/workspace/workspace-dialog";
 import { db } from "@/lib/db";
+import { format, getDictionary } from "@/lib/i18n";
 import { requireUser } from "@/lib/session";
+import { WorkspaceIcon } from "@/lib/workspace-icons";
 
 export default async function HomePage() {
   const user = await requireUser();
+  const t = getDictionary();
 
   const workspaces = await db.workspace.findMany({
     where: { userId: user.id },
@@ -27,14 +30,14 @@ export default async function HomePage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-            Hola, {user.firstName} 👋
+            {format(t.home.greeting, { name: user.firstName })}
           </h1>
-          <p className="mt-1 text-muted-foreground">Tus espacios de trabajo.</p>
+          <p className="mt-1 text-muted-foreground">{t.home.subtitle}</p>
         </div>
         <WorkspaceDialog
           trigger={
             <Button>
-              <Plus className="mr-1 h-4 w-4" /> Nuevo workspace
+              <Plus className="mr-1 h-4 w-4" /> {t.workspace.newWorkspace}
             </Button>
           }
         />
@@ -42,14 +45,12 @@ export default async function HomePage() {
 
       {workspaces.length === 0 ? (
         <div className="rounded-2xl border border-dashed p-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            Aún no tienes workspaces. Crea el primero para empezar a organizar tus tareas.
-          </p>
+          <p className="text-sm text-muted-foreground">{t.home.emptyText}</p>
           <div className="mt-4 flex justify-center">
             <WorkspaceDialog
               trigger={
                 <Button variant="outline">
-                  <Plus className="mr-1 h-4 w-4" /> Crear workspace
+                  <Plus className="mr-1 h-4 w-4" /> {t.workspace.createBtn}
                 </Button>
               }
             />
@@ -66,15 +67,10 @@ export default async function HomePage() {
             >
               <div className="flex items-center gap-2">
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-base"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
                   style={{ backgroundColor: `${ws.color}22` }}
                 >
-                  {ws.icon ?? (
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: ws.color }}
-                    />
-                  )}
+                  <WorkspaceIcon name={ws.icon} color={ws.color} className="h-4 w-4" />
                 </span>
                 <h2 className="truncate font-semibold group-hover:text-primary">{ws.name}</h2>
               </div>
@@ -82,7 +78,9 @@ export default async function HomePage() {
                 <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{ws.description}</p>
               )}
               <p className="mt-3 text-xs text-muted-foreground">
-                {ws._count.tasks} {ws._count.tasks === 1 ? "tarea" : "tareas"}
+                {format(ws._count.tasks === 1 ? t.home.taskCount : t.home.taskCountPlural, {
+                  count: ws._count.tasks,
+                })}
               </p>
             </Link>
           ))}

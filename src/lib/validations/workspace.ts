@@ -6,7 +6,7 @@ export const workspaceSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(60, "Máximo 60 caracteres"),
   description: z.string().trim().max(300, "Máximo 300 caracteres").optional().or(z.literal("")),
   color: z.string().regex(HEX_COLOR, "Color inválido"),
-  icon: z.string().trim().max(8).optional().or(z.literal("")),
+  icon: z.string().trim().max(40).optional().or(z.literal("")),
 });
 
 export type WorkspaceInput = z.infer<typeof workspaceSchema>;

@@ -14,11 +14,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useT } from "@/components/i18n-provider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { WORKSPACE_COLORS } from "@/lib/validations/workspace";
+import { WORKSPACE_ICON_NAMES, WORKSPACE_ICONS } from "@/lib/workspace-icons";
 import {
   createWorkspace,
   updateWorkspace,
@@ -44,6 +46,7 @@ export function WorkspaceDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const isEdit = Boolean(workspace);
   const action = isEdit ? updateWorkspace : createWorkspace;
 
@@ -55,12 +58,13 @@ export function WorkspaceDialog({
   const open = controlledOpen ?? uncontrolledOpen;
   const setOpen = setControlledOpen ?? setUncontrolledOpen;
   const [color, setColor] = useState(workspace?.color ?? WORKSPACE_COLORS[0]);
+  const [icon, setIcon] = useState(workspace?.icon ?? "");
   const router = useRouter();
 
   useEffect(() => {
     if (state?.success) {
       setOpen(false);
-      toast.success(isEdit ? "Workspace actualizado" : "Workspace creado");
+      toast.success(isEdit ? t.workspace.updated : t.workspace.created);
       if (!isEdit && state.workspaceId) {
         router.push(`/workspaces/${state.workspaceId}`);
       }
@@ -75,17 +79,18 @@ export function WorkspaceDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) setColor(workspace?.color ?? WORKSPACE_COLORS[0]);
+        if (next) {
+          setColor(workspace?.color ?? WORKSPACE_COLORS[0]);
+          setIcon(workspace?.icon ?? "");
+        }
       }}
     >
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Editar workspace" : "Nuevo workspace"}</DialogTitle>
+          <DialogTitle>{isEdit ? t.workspace.editTitle : t.workspace.newTitle}</DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "Cambia el nombre, color o detalles de este espacio."
-              : "Crea un espacio para agrupar tus tareas, sprints y notas."}
+            {isEdit ? t.workspace.editDesc : t.workspace.createDesc}
           </DialogDescription>
         </DialogHeader>
 
@@ -93,48 +98,75 @@ export function WorkspaceDialog({
         <form key={String(open)} action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="id" value={workspace!.id} />}
           <input type="hidden" name="color" value={color} />
+          <input type="hidden" name="icon" value={icon} />
 
           <div className="space-y-1.5">
-            <Label htmlFor="ws-name">Nombre</Label>
+            <Label htmlFor="ws-name">{t.workspace.name}</Label>
             <Input
               id="ws-name"
               name="name"
               required
               maxLength={60}
               defaultValue={workspace?.name ?? ""}
-              placeholder="Trabajo, Personal, Gimnasio…"
+              placeholder={t.workspace.namePlaceholder}
             />
             {state?.fieldErrors?.name && (
               <p className="text-xs text-destructive">{state.fieldErrors.name[0]}</p>
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="ws-icon">Icono (emoji, opcional)</Label>
-            <Input
-              id="ws-icon"
-              name="icon"
-              maxLength={8}
-              defaultValue={workspace?.icon ?? ""}
-              placeholder="💼"
-              className="w-24"
-            />
+          <div className="space-y-2">
+            <Label>{t.workspace.icon}</Label>
+            <div className="grid max-h-40 grid-cols-8 gap-1.5 overflow-y-auto rounded-lg border p-2">
+              <button
+                type="button"
+                onClick={() => setIcon("")}
+                aria-label={t.workspace.noIcon}
+                className={cn(
+                  "flex aspect-square items-center justify-center rounded-md transition",
+                  icon === "" ? "ring-2 ring-primary" : "hover:bg-accent",
+                )}
+              >
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+              </button>
+              {WORKSPACE_ICON_NAMES.map((iconName) => {
+                const Icon = WORKSPACE_ICONS[iconName];
+                const selected = icon === iconName;
+                return (
+                  <button
+                    key={iconName}
+                    type="button"
+                    onClick={() => setIcon(iconName)}
+                    aria-label={iconName}
+                    className={cn(
+                      "flex aspect-square items-center justify-center rounded-md transition",
+                      selected ? "ring-2 ring-primary" : "hover:bg-accent",
+                    )}
+                  >
+                    <Icon
+                      className="h-4 w-4"
+                      style={{ color: selected ? color : undefined }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ws-description">Descripción (opcional)</Label>
+            <Label htmlFor="ws-description">{t.workspace.description}</Label>
             <Textarea
               id="ws-description"
               name="description"
               maxLength={300}
               defaultValue={workspace?.description ?? ""}
-              placeholder="¿Para qué usas este espacio?"
+              placeholder={t.workspace.descriptionPlaceholder}
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Color</Label>
+            <Label>{t.workspace.color}</Label>
             <div className="flex flex-wrap gap-2">
               {WORKSPACE_COLORS.map((c) => (
                 <button
@@ -156,7 +188,7 @@ export function WorkspaceDialog({
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>
-              {pending ? "Guardando…" : isEdit ? "Guardar cambios" : "Crear workspace"}
+              {pending ? t.common.saving : isEdit ? t.common.saveChanges : t.workspace.createBtn}
             </Button>
           </DialogFooter>
         </form>

@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { WorkspaceDialog } from "@/components/workspace/workspace-dialog";
 import { WorkspaceSubNav } from "@/components/workspace/workspace-subnav";
 import { db } from "@/lib/db";
+import { getDictionary } from "@/lib/i18n";
 import { requireUser } from "@/lib/session";
+import { WorkspaceIcon } from "@/lib/workspace-icons";
 
 export default async function WorkspaceLayout({
   children,
@@ -15,6 +17,7 @@ export default async function WorkspaceLayout({
   params: Promise<{ id: string }>;
 }) {
   const user = await requireUser();
+  const t = getDictionary();
   const { id } = await params;
 
   const workspace = await db.workspace.findFirst({
@@ -28,15 +31,10 @@ export default async function WorkspaceLayout({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <span
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
             style={{ backgroundColor: `${workspace.color}22` }}
           >
-            {workspace.icon ?? (
-              <span
-                className="h-3.5 w-3.5 rounded-full"
-                style={{ backgroundColor: workspace.color }}
-              />
-            )}
+            <WorkspaceIcon name={workspace.icon} color={workspace.color} className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <h1 className="text-2xl font-extrabold tracking-tight">{workspace.name}</h1>
@@ -56,7 +54,7 @@ export default async function WorkspaceLayout({
           }}
           trigger={
             <Button variant="outline" size="sm">
-              <Pencil className="mr-1 h-4 w-4" /> Editar
+              <Pencil className="mr-1 h-4 w-4" /> {t.common.edit}
             </Button>
           }
         />
