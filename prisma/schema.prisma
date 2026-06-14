@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  firstName       String
+  lastName        String?
+  passwordHash    String? // null si usa OAuth para login
+  defaultProvider String         @default("anthropic")
+  assistant       Assistant?
+  workspaces      Workspace[]
+  notes           Note[]
+  apiKeys         ApiKey[]
+  googleAccount   GoogleAccount?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Assistant {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String   @default("Asistente") // el usuario le pone nombre
+  avatarStyle  String   @default("notionists") // estilo de DiceBear
+  avatarConfig Json // parámetros visuales (semilla, rasgos)
+  persona      String? // tono/personalidad para el system prompt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ApiKey {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String // "anthropic" | "openai" | "google" | "ollama"
+  encryptedKey String // cifrada con AES-256-GCM, nunca en claro
+  label        String?
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, provider])
+}
+
+model GoogleAccount {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleSub        String   @unique // id de usuario de Google
+  encryptedRefresh String // refresh token cifrado
+  scope            String
+  calendarId       String   @default("primary")
+  syncToken        String? // para sincronización incremental
+  connectedAt      DateTime @default(now())
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  color       String   @default("#534AB7") // identidad visual por workspace
+  icon        String?
+  tasks       Task[]
+  sprints     Sprint[]
+  notes       Note[]
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Sprint {
+  id              String         @id @default(cuid())
+  workspaceId     String
+  workspace       Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  goal            String?
+  startDate       DateTime
+  endDate         DateTime
+  tasks           Task[]
+  calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  calendarEventId String?        @unique
+  createdAt       DateTime       @default(now())
+}
+
+model Task {
+  id              String         @id @default(cuid())
+  workspaceId     String
+  workspace       Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sprintId        String?
+  sprint          Sprint?        @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  title           String
+  description     String?
+  weight          Int            @default(5) // prioridad 1-10
+  status          TaskStatus     @default(TODO)
+  aiGenerated     Boolean        @default(false)
+  position        Int            @default(0) // orden en la columna kanban
+  dueDate         DateTime?
+  subtasks        Subtask[]
+  calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  calendarEventId String?        @unique
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title     String
+  note      String? // una línea opcional, NO descripción completa
+  weight    Int      @default(5)
+  done      Boolean  @default(false)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Note {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId     String? // null = nota independiente
+  workspace       Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  title           String
+  content         String // markdown
+  reminderAt      DateTime?
+  calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  calendarEventId String?        @unique
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model CalendarEvent {
+  id            String    @id @default(cuid())
+  googleEventId String?   @unique // id del evento en Google, null si solo local
+  title         String
+  startsAt      DateTime
+  endsAt        DateTime?
+  synced        Boolean   @default(false)
+  lastSyncedAt  DateTime?
+  task          Task?
+  sprint        Sprint?
+  note          Note?
+  createdAt     DateTime  @default(now())
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}

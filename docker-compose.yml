@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: cho-planner-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-taskmanager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskmanager}
+      POSTGRES_DB: ${POSTGRES_DB:-taskmanager}
+    ports:
+      # Host 5433 para no chocar con un Postgres nativo en 5432.
+      - "5433:5432"
+    volumes:
+      - cho_planner_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taskmanager}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cho_planner_pgdata:
